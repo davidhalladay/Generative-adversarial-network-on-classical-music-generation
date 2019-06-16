@@ -1,0 +1,5 @@
+numpy==1.14.5
+Pillow==5.2.0
+pretty-midi==0.2.8
+protobuf==3.6.1
+pypianoroll==0.4.6

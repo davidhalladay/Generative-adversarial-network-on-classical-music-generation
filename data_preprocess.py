@@ -1,4 +1,3 @@
-from phraser import *
 import numpy as np
 from pypianoroll import Multitrack, Track
 from matplotlib import pyplot as plt
@@ -6,7 +5,7 @@ import os
 
 # setting Global var.
 length_Section = 96
-length_tab = 10
+length_tab = 4
 num_of_song = [14, 3, 29, 7, 10, 9, 48, 9, 3, 16, 21, 16, 15, 21, 8, 29, 24, 12]
 
 def load_file(root_path):
@@ -51,15 +50,19 @@ def test():
     tmp_pypianoroll.remove_empty_tracks()
     tmp_np = tmp_pypianoroll.get_stacked_pianoroll()
 
-    tarck1 = tmp_np[:length_Section*10,:,0]
-    tarck2 = tmp_np[:length_Section*10,:,1]
+    tarck1 = tmp_np[:960,:,0]
+    tarck2 = tmp_np[:960,:,1]
+    tarck1 = tarck1 > 0.1
+    tarck2 = tarck2 > 0.1
+
     tarck1 = Track(tarck1, program=0, is_drum=False, name='unknown')
     tarck2 = Track(tarck2, program=0, is_drum=False, name='unknown')
+
 
     cc = Multitrack(tracks=[tarck1,tarck2], tempo=120.0,beat_resolution=24)
 
     #print(cc)
-    cc.write('test_1.mid')
+    cc.write('test_2.mid')
     #cc = Multitrack(tmp_np)
 
 def make_data(data):
@@ -74,25 +77,39 @@ def make_data(data):
     print("cutting data...")
     for idx in range(data.shape[0]):
         song = data[idx]  # song = [ num of m , 128 , 2 ]
+        if song.shape[2] != 2:
+            continue
         length_of_data = (length_Section*length_tab)
         num_of_cut = int(song.shape[0]/length_of_data)
         for c in range(num_of_cut):
             new_data.append(song[length_of_data*c:length_of_data*(c+1),:,:])
-            print(song[length_of_data*c:length_of_data*(c+1),:,:].shape)
-            if song.shape[2] == 1:
-                print("WTF???????")
     new_data = np.array(new_data)
+    new_data = new_data/new_data.max()
     print("cutting finished!")
     print("data size : ",new_data.shape)
+    # data size :  (3199, 960, 128, 2)
     return new_data , label
 
-def main():
-    root_path = "raw_classical_music_data"
-    raw_data = load_file(root_path)
-    count = count_tab(raw_data)
-    cut_data ,musician_label= make_data(raw_data)
+#def main():
+#    root_path = "raw_classical_music_data"
+#    raw_data = load_file(root_path)
+#    count = count_tab(raw_data)
+#    cut_data , musician_label= make_data(raw_data)
 
 ########################################################
 #                   operating function
 ########################################################
-main()
+def make_mid(data, threshold):
+    tarck1 = data[0][:,:,0]
+    tarck2 = data[0][:,:,1]
+    tarck1 = tarck1 >= threshold
+    tarck2 = tarck2 >= threshold
+    print(tarck1)
+    print(tarck2)
+    print("num of non-zero :",np.sum(tarck1)+np.sum(tarck2))
+    tarck1 = Track(tarck1, program=0, is_drum=False, name='unknown')
+    tarck2 = Track(tarck2, program=0, is_drum=False, name='unknown')
+    return tarck1,tarck2
+
+if __name__ == '__main__':
+    test()
